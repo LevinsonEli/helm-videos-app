@@ -1,0 +1,63 @@
+
+appName: videos-app
+namespace: default
+
+deployment:
+  deploymentName: videos-app-deployment
+  replicaCount: 1
+  container:
+    name: videos-app-container
+    image: 
+    imageTag: latest
+    imageTagUpdatedAt: 0
+    port: 5000
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "256Gi"
+      cpu: "250m"
+
+service:
+  name: videos-app-svc
+  type: ClusterIP
+  clusterIP: None
+  exposePort: 80
+
+ingress:
+  ingressClassName: nginx
+  host: 
+  tls:
+    enabled: true
+    clusterIssuer: "letsencrypt-prod"
+    secretName: example-tls-secret
+  email: 
+
+mongodb:
+  # arbiter:
+  #   enabled: false
+  architecture: replicaset
+  replicaCount: 1
+  auth:
+    enabled: false
+    secretName: "mongodb-credentials"
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 200Mi
+  ports:
+    mongodb: 27017
+
+
+configmap:
+  name: videos-env
+  data:
+    HOST: "0.0.0.0"
+    VIDEOS_APP_PORT_INTERNAL: 5000
+    VIDEOS_APP_PORT_EXTERNAL: 5000
+    FLASK_ENV: "PROD"
+    MONGO_HOST: "mongodb-headless"
+    DB_NAME: "videos-app"
+    MONGO_PORT: 27017

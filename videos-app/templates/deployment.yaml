@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.deploymentName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      imagePullSecrets:
+      - name: ecr-secret
+      containers:
+        - name: {{ .Values.deployment.container.name }}
+          image: "{{ .Values.deployment.container.image }}:{{ .Values.deployment.container.imageTag }}"
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configmap.name }}
+          env:
+          - name: MONGO_USER
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.mongodb.auth.secretName }}
+                key: username
+          - name: MONGO_PASS
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.mongodb.auth.secretName }}
+                key: password
+          - name: MONGO_URI
+            # value: "mongodb://$(MONGO_USER):$(MONGO_PASS)@{{ .Release.Name }}-{{ .Values.configmap.data.MONGO_HOST }}:{{ .Values.configmap.data.MONGO_PORT }}/{{ .Values.configmap.data.DB_NAME }}"
+            value: "mongodb://{{ .Release.Name }}-{{ .Values.configmap.data.MONGO_HOST }}:{{ .Values.configmap.data.MONGO_PORT }}/{{ .Values.configmap.data.DB_NAME }}"
+          ports:
+            - containerPort: {{ .Values.deployment.container.port }}
+          resources:
+            requests:
+              memory: {{ .Values.deployment.resources.requests.memory }}
+              cpu: {{ .Values.deployment.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.deployment.resources.limits.memory }}
+              cpu: {{ .Values.deployment.resources.limits.cpu }}
